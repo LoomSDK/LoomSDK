@@ -20,7 +20,7 @@ if (MSVC)
 
     add_custom_command(TARGET ${PROJECT_NAME}
         POST_BUILD
-        COMMAND echo f | xcopy /F /Y \"${LDBBIN}\" \"${ARTIFACTS_DIR}/tools/ldb.exe\"
+        COMMAND echo f | xcopy /F /Y \"${LDBBIN}\" \"${ARTIFACTS_DIR}/tools/ldb.exe\" | find /v "File(s) copied"
     )
 
 else ()

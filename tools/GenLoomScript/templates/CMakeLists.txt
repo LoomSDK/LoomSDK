@@ -71,7 +71,7 @@ message(${TARGETBIN})
 if (MSVC)
 add_custom_command(TARGET ${TARGET}
     POST_BUILD
-    COMMAND echo f | xcopy /F /Y \"${TARGETBIN}\" \"${DESTINATION}\\${TARGET}.exe\")
+    COMMAND echo f | xcopy /F /Y \"${TARGETBIN}\" \"${DESTINATION}\\${TARGET}.exe\") | find /v "File(s) copied"
 endif(MSVC)
 
 endmacro()

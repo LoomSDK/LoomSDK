@@ -1,4 +1,12 @@
-project(${APPLICATION_NAME})
+if (MSVC)
+    project(${APPLICATION_NAME}Lib)
+    set(PROJECT_NAME_WINDOWED ${APPLICATION_NAME})
+    set(PROJECT_NAME_CONSOLE ${APPLICATION_NAME}Console)
+    set(BINARY_NAME_WINDOWED ${APPLICATION_NAME}.exe)
+    set(BINARY_NAME_CONSOLE ${APPLICATION_NAME}.com)
+else()
+    project(${APPLICATION_NAME})
+endif()
 
 include_directories( ${LOOM_INCLUDE_FOLDERS} )
 
@@ -70,7 +78,23 @@ if (ANDROID)
 elseif(APPLE)
     add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${APPLICATION_HDR} ${APPLICATION_SRC})
 elseif(MSVC)
-    add_executable(${PROJECT_NAME} WIN32 ${APPLICATION_HDR} ${APPLICATION_SRC})
+
+    add_library(${PROJECT_NAME} STATIC ${APPLICATION_HDR} ${APPLICATION_SRC})
+
+    add_executable(${PROJECT_NAME_WINDOWED} WIN32 common/null.cpp)
+    add_executable(${PROJECT_NAME_CONSOLE} common/null.cpp )
+    target_link_libraries(${PROJECT_NAME_WINDOWED} ${PROJECT_NAME}) 
+    target_link_libraries(${PROJECT_NAME_CONSOLE} ${PROJECT_NAME}) 
+
+    set(WINBIN $<TARGET_FILE:${PROJECT_NAME_WINDOWED}>) 
+    add_custom_command(TARGET ${PROJECT_NAME_WINDOWED} POST_BUILD COMMAND
+        echo f | xcopy /F /Y "\"${WINBIN}\"" "\"${ARTIFACTS_DIR}/bin/${BINARY_NAME_WINDOWED}\"" | find /v "File(s) copied"
+    )
+    
+    set(CONBIN $<TARGET_FILE:${PROJECT_NAME_CONSOLE}>) 
+    add_custom_command(TARGET ${PROJECT_NAME_CONSOLE} POST_BUILD COMMAND
+        echo f | xcopy /F /Y "\"${CONBIN}\"" "\"${ARTIFACTS_DIR}/bin/${BINARY_NAME_CONSOLE}\"" | find /v "File(s) copied"
+    )
 else()
     add_executable(${PROJECT_NAME} ${APPLICATION_HDR} ${APPLICATION_SRC})
 endif(ANDROID)
@@ -246,14 +270,7 @@ elseif(MSVC)
         target_link_libraries(${PROJECT_NAME} "telemetry32.link" "telemetry64.link")
     endif()
 
-    set(DEMOBIN $<TARGET_FILE:${PROJECT_NAME}>)
-     
-    add_custom_command(TARGET ${PROJECT_NAME}
-        POST_BUILD
-        COMMAND echo f | xcopy /F /Y \"${DEMOBIN}\" \"${ARTIFACTS_DIR}/bin/LoomPlayer.exe\"
-    )
-    
-    
+
 elseif(ANDROID)
     
     target_link_libraries(${PROJECT_NAME}

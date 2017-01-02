@@ -69,6 +69,8 @@ const int CAMERA_REQUEST_IGNORE_TIME = 100;
 lmDefineLogGroup(applicationLogGroup, "app", 1, LoomLogInfo);
 lmDefineLogGroup(scriptLogGroup, "script", 1, LoomLogInfo);
 
+extern int gLoomHeadless;
+
 // Define the global Loom C entrypoints.
 extern "C" {
 
@@ -217,9 +219,7 @@ void LoomApplication::initMainAssembly()
     initBytes = rootVM->openExecutableAssembly(bootAssembly);
     rootVM->readExecutableAssemblyBinaryHeader(initBytes);
     Assembly *assembly = BinReader::loadMainAssemblyHeader();
-    LoomApplicationConfig::parseApplicationConfig(assembly->getLoomConfig());
-    
-    Loom2D::Stage::initFromConfig();
+    LoomApplication::setConfigJSON(assembly->getLoomConfig());
 }
 
 void LoomApplication::execMainAssembly()
@@ -258,30 +258,38 @@ void LoomApplication::execMainAssembly()
     }
     else
     {
-        // look for a class derived from LoomApplication in the main assembly
-        Type *loomAppType = rootVM->getType("loom.Application");
-        if (loomAppType)
+        const char *applicationTypeName = "loom.Application";
+        const char *consoleApplicationTypeName = "system.application.ConsoleApplication";
+        Type *applicationType = rootVM->getType(applicationTypeName);
+        Type *consoleApplicationType = rootVM->getType(consoleApplicationTypeName);
+        lmCheck(applicationType || consoleApplicationType, "No root application type not found in main assembly");
+        
+        Type *foundApp = NULL;
+        Type *foundCon = NULL;
+
+        utArray<Type *> types;
+        mainAssembly->getTypes(types);
+        for (UTsize i = 0; i < types.size(); i++)
         {
-            utArray<Type *> types;
-            mainAssembly->getTypes(types);
-            for (UTsize i = 0; i < types.size(); i++)
-            {
-                Type *appType = types.at(i);
-                if (appType->isDerivedFrom(loomAppType))
-                {
-                    const char *name = appType->getName();
-                    size_t nameLen = strlen(name);
-                    lmLogInfo(applicationLogGroup, "%.*s", nameLen, "---------------------------------------------");
-                    lmLogInfo(applicationLogGroup, "%s", name);
-                    lmLogInfo(applicationLogGroup, "%.*s", nameLen, "---------------------------------------------");
-                    int top = lua_gettop(rootVM->VM());
-                    lsr_createinstance(rootVM->VM(), appType);
-                    lualoom_getmember(rootVM->VM(), -1, "initialize");
-                    lua_call(rootVM->VM(), 0, 0);
-                    lua_settop(rootVM->VM(), top);
-                }
-            }
+            Type *appType = types.at(i);
+            if (applicationType && appType->isDerivedFrom(applicationType)) foundApp = appType;
+            if (consoleApplicationType && appType->isDerivedFrom(consoleApplicationType)) foundCon = appType;
         }
+
+        lmCheck(foundApp || foundCon, "Unable to find a class that extends %s or %s", applicationTypeName, consoleApplicationTypeName);
+
+        Type *execType = foundApp ? foundApp : foundCon;
+
+        const char *name = execType->getName();
+        size_t nameLen = strlen(name);
+        lmLogInfo(applicationLogGroup, "%.*s", nameLen, "---------------------------------------------");
+        lmLogInfo(applicationLogGroup, "%s", name);
+        lmLogInfo(applicationLogGroup, "%.*s", nameLen, "---------------------------------------------");
+        int top = lua_gettop(rootVM->VM());
+        lsr_createinstance(rootVM->VM(), execType);
+        lualoom_getmember(rootVM->VM(), -1, "initialize");
+        lua_call(rootVM->VM(), 0, 0);
+        lua_settop(rootVM->VM(), top);
     }
 }
 
@@ -448,7 +456,7 @@ int LoomApplication::initializeCoreServices()
 
     loom_asset_subscribe(bootAssembly.c_str(), LoomApplication::__handleMainAssemblyUpdate, NULL, 0);
 
-    // And fire script executoin.
+    // And fire script execution.
     execMainAssembly();
     suppressAssetTriggeredReload = false;
 
@@ -490,6 +498,15 @@ const utString& LoomApplication::getConfigJSON()
 {
     return LoomApplicationConfig::getApplicationConfigJSON();
 }
+
+void LoomApplication::setConfigJSON(const utString &configJSON)
+{
+    LoomApplicationConfig::parseApplicationConfig(configJSON);
+    Loom2D::Stage::sizeDirty = true;
+    Loom2D::Stage::visDirty = true;
+    Loom2D::Stage::initFromConfig();
+}
+
 
 
 void LoomApplication::__handleMainAssemblyUpdate(void *payload, const char *name)
@@ -606,6 +623,7 @@ int registerLoomApplication(lua_State *L)
        .addStaticMethod("fireGenericEvent", &LoomApplication::fireGenericEvent)
 
        .addStaticProperty("loomConfigJSON", &LoomApplicationConfig::getApplicationConfigJSON)
+       .addStaticMethod("setConfigJSON", &LoomApplication::setConfigJSON)
 
        .addStaticProperty("version", &LoomApplicationConfig::version)
 

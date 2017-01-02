@@ -166,6 +166,113 @@ namespace GFX
 #undef GFX_PROC_VOID
     } GL_Context;
 
+
+
+    typedef struct GL_ContextDummy
+    {
+
+#define GFX_PROC(ret, func, params, args) 
+#define GFX_PROC_VOID(func, params, args) static void GFX_CALL func params {};
+    
+#include "gfxGLES2EntryPoints.h"
+#undef GFX_PROC
+#undef GFX_PROC_VOID
+
+        // Returning functions
+        static GLenum GFX_CALL glCheckFramebufferStatus(GLenum target)
+        {
+            return GL_FRAMEBUFFER_UNSUPPORTED;
+        }
+        static GLuint GFX_CALL glCreateProgram()
+        {
+            return 1;
+        }
+        static GLuint GFX_CALL glCreateShader(GLenum type)
+        {
+            return 1;
+        }
+        static GLenum GFX_CALL glGetAttribLocation(GLuint program, const GLchar *name)
+        {
+            return 1;
+        }
+        static const GLubyte* GFX_CALL glGetError()
+        {
+            return (const GLubyte*)"dummy";
+        }
+        static const GLubyte* GFX_CALL glGetString(GLenum name)
+        {
+            return (const GLubyte*)"";
+        }
+        static GLint GFX_CALL glGetUniformLocation(GLuint program, const GLchar *name)
+        {
+            return 1;
+        }
+        static GLboolean GFX_CALL glIsBuffer(GLuint buffer)
+        {
+            return false;
+        }
+        static GLboolean GFX_CALL glIsEnabled(GLenum cap)
+        {
+            return false;
+        }
+        static GLboolean GFX_CALL glIsFramebuffer(GLuint framebuffer)
+        {
+            return false;
+        }
+        static GLboolean GFX_CALL glIsProgram(GLuint program)
+        {
+            return false;
+        }
+        static GLboolean GFX_CALL glIsRenderbuffer(GLuint renderbuffer)
+        {
+            return false;
+        }
+        static GLboolean GFX_CALL glIsShader(GLuint shader)
+        {
+            return false;
+        }
+        static GLboolean GFX_CALL glIsTexture(GLuint texture)
+        {
+            return false;
+        }
+
+        // Overrides for specific functions
+        
+        // glGenBuffers + glGenFramebuffers + glGenRenderbuffers + glGenTextures
+        static void GFX_CALL dummy_glGen_(GLsizei n, GLuint *buffers)
+        {
+            for (int i = 0; i < n; i++) buffers[i] = 1;
+        }
+
+        // glGetActiveAttrib + glGetActiveUniform
+        static void GFX_CALL dummy_glGetActive_(GLuint program, GLuint index, GLsizei bufSize, GLsizei *length, GLint *size, GLenum *type, GLchar *name)
+        {
+            *length = 0;
+            *size = 0;
+            *type = GL_FLOAT;
+            *name = 0;
+        }
+
+        static void GFX_CALL dummy_glGetAttachedShaders(GLuint program, GLsizei maxCount, GLsizei *count, GLuint *shaders)
+        {
+            *count = 0;
+        }
+
+        static void GFX_CALL dummy_glGetShaderiv(GLuint shader, GLenum pname, GLint *params)
+        {
+            if (pname == GL_COMPILE_STATUS) *params = GL_TRUE;
+            else *params = 0;
+        }
+
+        static void GFX_CALL dummy_glGetProgramiv(GLuint program, GLenum pname, GLint *params)
+        {
+            if (pname == GL_LINK_STATUS) *params = GL_TRUE;
+            else *params = 0;
+        }
+
+    } GL_ContextDummy;
+
+
 // Represents graphics render target properties that can change from frame buffer to frame buffer
 typedef struct GraphicsRenderTarget {
     // The current width of the graphics device

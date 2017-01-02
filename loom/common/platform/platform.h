@@ -104,7 +104,4 @@ int platform_openURL(const char *url);
 }
 #endif
 
-
-int platform_error(const char *out, ...);
-int platform_debugOut(const char *out, ...);
 #endif // _PLATFORM_PLATFORM_H_

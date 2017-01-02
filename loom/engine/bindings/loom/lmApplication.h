@@ -106,6 +106,7 @@ public:
     static bool compilerEnabled();
 
     static const utString& getConfigJSON();
+    static void setConfigJSON(const utString &configJSON);
 
     static int initializeTypes();
     static int registerScriptTypes();

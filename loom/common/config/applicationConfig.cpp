@@ -39,6 +39,7 @@ int      LoomApplicationConfig::assetPort;
 bool     LoomApplicationConfig::_wants51Audio   = false;
 utString LoomApplicationConfig::_version       = "0.0.0";
 utString LoomApplicationConfig::_applicationId = "unknown_app_id";
+utString LoomApplicationConfig::_applicationType = "";
 
 int      LoomApplicationConfig::_waitForDebugger = false;
 utString LoomApplicationConfig::_debuggerHost;
@@ -266,6 +267,7 @@ void LoomApplicationConfig::parseApplicationConfig(const utString& jsonString)
 
     _jsonReadStr(json, "version", _version);
     _jsonReadStr(json, "app_id", _applicationId);
+    _jsonReadStr(json, "app_type", _applicationType);
 
     // Parse log block.
     if (json_t *logBlock = json_object_get(json, "log"))

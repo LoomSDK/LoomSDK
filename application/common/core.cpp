@@ -51,6 +51,9 @@ extern "C"
 
 SDL_Window *gSDLWindow = NULL;
 SDL_GLContext gContext;
+int gLoomHeadless = 0;
+
+#define LOOM_PLAYER_VERSION "1.1.0"
 
 #define SDL_LOG_EVENTS 0
 lmDefineLogGroup(coreLogGroup, "core", 1, LoomLogInfo);
@@ -372,30 +375,56 @@ static int sdlPriorityEvents(void* userdata, SDL_Event* event)
     return true;
 }
 
-enum  optionIndex { UNKNOWN, HELP, FROM_RUBY };
+enum  OptionIndex { UNKNOWN, VERSION, HELP, FROM_RUBY, APP_TYPE, LOOP };
+enum  OptionType { DISABLE, ENABLE, OTHER };
 const option::Descriptor usage[] =
 {
-    { UNKNOWN,   0,"" , ""         , option::Arg::None, "USAGE: LoomPlayer [options] [loom-file-or-project-dir] [app-arguments]\n\n"
-                                                  "Options:" },
-    { HELP,      0, "", "help",      option::Arg::None, "  --help  \tPrint usage and exit" },
-    { FROM_RUBY, 0, "", "from-ruby", option::Arg::None, "  --from-ruby  \tDefined when running from the Ruby agent" },
-    { UNKNOWN,   0, "" , ""        , option::Arg::None, "\nExamples:\n"
-                                               "  LoomPlayer  \tLaunches project in the working directory\n"
-                                               "  LoomPlayer .  \tSame as above\n"
-                                               "  LoomPlayer path/to/project/dir/  \tLaunches project located in path/to/project/dir/\n"
-                                               "  LoomPlayer path/to/assembly/Main.loom  \tLaunches the specified .loom assembly\n"
+    { UNKNOWN,   OTHER, "" , "",          option::Arg::None,     "USAGE: LoomPlayer [options] [loom-file-or-project-dir] [app-arguments]\n"
+                                                                 "\n"
+                                                                 "Options:" },
+    { VERSION,   OTHER, "v", "version",   option::Arg::None,     "  --version, -v  \tPrint version information and exit." },
+    { HELP,      OTHER, "h", "help",      option::Arg::None,     "  --help, -h  \tPrint usage and exit." },
+    { FROM_RUBY, OTHER, "",  "from-ruby", option::Arg::None,     "  --from-ruby  \tDefined when running from the Ruby asset agent." },
+    { APP_TYPE,  OTHER, "",  "app-type",  option::Arg::Optional, "  --app-type  \tOverride the application type, can be either 'console' or 'gui'." },
+    { LOOP,      OTHER, "",  "loop",      option::Arg::Optional, "  --loop  \t" },
+    { UNKNOWN,   OTHER, "",  "",          option::Arg::None,     0 },
+    { UNKNOWN,   OTHER, "",  "",          option::Arg::None,     "\n"
+                                                                 "Examples:\n"
+                                                                 "  LoomPlayer  \tLaunches project in the working directory.\n"
+                                                                 "  LoomPlayer .  \tSame as above.\n"
+                                                                 "  LoomPlayer path/to/project/dir/  \tLaunches project located in path/to/project/dir/.\n"
+                                                                 "  LoomPlayer path/to/assembly/Main.loom  \tLaunches the specified .loom assembly.\n"
     },
     { 0,0,0,0,0,0 }
 };
 
+static utByteArray usageBuffer;
+
+static void printUsageFlush()
+{
+    UTsize size = usageBuffer.getSize();
+    if (size == 0) return;
+    usageBuffer.setPosition(size - 1);
+    char last = usageBuffer.readUnsignedByte();
+    if (last == '\n')
+    {
+        usageBuffer.resize(size - 1);
+    }
+    platform_debugOut("%.*s", usageBuffer.getSize(), usageBuffer.getDataPtr());
+    usageBuffer.resize(0);
+}
+
 static void printOption(const char *msg, int size)
 {
-    platform_error("%.*s", size, msg);
+    usageBuffer.writeUTFInternal(msg, size);
+    if (msg[size - 1] == '\n') printUsageFlush();
 }
 
 static void printUsage()
 {
+    usageBuffer.reserve(256);
     option::printUsage(printOption, usage);
+    printUsageFlush();
 }
 
 static int getSDLWindowPosition(int appConfigPos) {
@@ -444,6 +473,11 @@ main(int argc, char *argv[])
 
     if (parse.error()) usageError("Error parsing arguments");
 
+    if (options[VERSION]) {
+        platform_debugOut("%s", LOOM_PLAYER_VERSION);
+        return 0;
+    }
+
     if (options[HELP]) {
         printUsage();
         return 0;
@@ -489,8 +523,9 @@ main(int argc, char *argv[])
 
     LSSetExitHandler(loom_appShutdown);
 
-    // Initialize logging.
+    // Initialize logging
     loom_log_initialize();
+    loom_log_buffer();
 
     LSLuaState::initCommandLine(parse.nonOptionsCount() - coreOptions, parse.nonOptions() + coreOptions);
 
@@ -499,6 +534,11 @@ main(int argc, char *argv[])
     SDL_LogSetOutputFunction(sdlLogOutput, NULL);
 
     loom_appInit();
+
+    gLoomHeadless = (options[APP_TYPE] ? options[APP_TYPE].arg : LoomApplicationConfig::applicationType()) == "console";
+    if (gLoomHeadless) loom_log_setGlobalLevel(LoomLogWarn);
+
+    loom_log_buffer_flush();
 
     // Log the Loom build timestamp!
     const char *buildTarget;
@@ -519,6 +559,7 @@ main(int argc, char *argv[])
     lmLogDebug(coreLogGroup, "SDL compiled version: %d.%d.%d", compiled.major, compiled.minor, compiled.patch);
     lmLogDebug(coreLogGroup, "SDL linked version : %d.%d.%d", linked.major, linked.minor, linked.patch);
 
+    if (gLoomHeadless) SDL_setenv("SDL_VIDEODRIVER", "dummy", 1);
 
     SDL_Init(
         SDL_INIT_TIMER |
@@ -557,55 +598,58 @@ main(int argc, char *argv[])
     // Set event callback for events that cannot wait
     SDL_SetEventFilter(sdlPriorityEvents, NULL);
 
-    int stencilSize = 1;
-    ret = SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, stencilSize);
-    lmAssert(ret == 0, "SDL Error: %s", SDL_GetError());
+    if (!gLoomHeadless) {
 
-    Uint32 windowFlags = 0;
+        int stencilSize = 1;
+        ret = SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, stencilSize);
+        lmAssert(ret == 0, "Unable to set OpenGL stencil size to %d: %s", stencilSize, SDL_GetError());
 
-    windowFlags |= SDL_WINDOW_HIDDEN;
-    windowFlags |= SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI;
+        Uint32 windowFlags = 0;
+
+        windowFlags |= SDL_WINDOW_HIDDEN;
+        windowFlags |= SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI;
 
 #if LOOM_PLATFORM == LOOM_PLATFORM_IOS
-    windowFlags |= SDL_WINDOW_BORDERLESS;
+        windowFlags |= SDL_WINDOW_BORDERLESS;
 #endif
 
-    if (LoomApplicationConfig::displayMaximized()) windowFlags |= SDL_WINDOW_MAXIMIZED;
-    if (LoomApplicationConfig::displayMinimized()) windowFlags |= SDL_WINDOW_MINIMIZED;
-    if (LoomApplicationConfig::displayResizable()) windowFlags |= SDL_WINDOW_RESIZABLE;
-    if (LoomApplicationConfig::displayBorderless()) windowFlags |= SDL_WINDOW_BORDERLESS;
-    utString displayMode = LoomApplicationConfig::displayMode();
+        if (LoomApplicationConfig::displayMaximized()) windowFlags |= SDL_WINDOW_MAXIMIZED;
+        if (LoomApplicationConfig::displayMinimized()) windowFlags |= SDL_WINDOW_MINIMIZED;
+        if (LoomApplicationConfig::displayResizable()) windowFlags |= SDL_WINDOW_RESIZABLE;
+        if (LoomApplicationConfig::displayBorderless()) windowFlags |= SDL_WINDOW_BORDERLESS;
+        utString displayMode = LoomApplicationConfig::displayMode();
 
-    windowFlags |=
-        displayMode == "window" ? 0 :
-        displayMode == "fullscreen" ? SDL_WINDOW_FULLSCREEN :
-        displayMode == "fullscreenWindow" ? SDL_WINDOW_FULLSCREEN_DESKTOP :
-        0;
+        windowFlags |=
+            displayMode == "window" ? 0 :
+            displayMode == "fullscreen" ? SDL_WINDOW_FULLSCREEN :
+            displayMode == "fullscreenWindow" ? SDL_WINDOW_FULLSCREEN_DESKTOP :
+            0;
 
-    // Set up SDL window.
-    if ((gSDLWindow = SDL_CreateWindow(
-        "Loom",
-        getSDLWindowPosition(LoomApplicationConfig::displayX()),
-        getSDLWindowPosition(LoomApplicationConfig::displayY()),
-        LoomApplicationConfig::displayWidth(),
-        LoomApplicationConfig::displayHeight(),
-        windowFlags
-    )) == NULL)
-    {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL_CreateWindow(): %s\n", SDL_GetError());
-        exit(1);
-    }
+        // Set up SDL window.
+        if ((gSDLWindow = SDL_CreateWindow(
+            "Loom",
+            getSDLWindowPosition(LoomApplicationConfig::displayX()),
+            getSDLWindowPosition(LoomApplicationConfig::displayY()),
+            LoomApplicationConfig::displayWidth(),
+            LoomApplicationConfig::displayHeight(),
+            windowFlags
+        )) == NULL)
+        {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL_CreateWindow(): %s\n", SDL_GetError());
+            exit(1);
+        }
 
-    gContext = SDL_GL_CreateContext(gSDLWindow);
-    if (!gContext) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL_GL_CreateContext(): %s\n", SDL_GetError());
-        exit(2);
-    }
+        gContext = SDL_GL_CreateContext(gSDLWindow);
+        if (!gContext) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL_GL_CreateContext(): %s\n", SDL_GetError());
+            exit(2);
+        }
 
-    ret = SDL_GL_SetSwapInterval(-1);
-    if (ret != 0) {
-        lmLogDebug(coreLogGroup, "Late swap tearing not supported, using vsync");
-        SDL_GL_SetSwapInterval(1);
+        ret = SDL_GL_SetSwapInterval(-1);
+        if (ret != 0) {
+            lmLogDebug(coreLogGroup, "Late swap tearing not supported, using vsync");
+            SDL_GL_SetSwapInterval(1);
+        }
     }
 
     SDL_StopTextInput();
@@ -615,7 +659,7 @@ main(int argc, char *argv[])
     supplyEmbeddedAssets();
 
     /* Main render loop */
-    gLoomExecutionDone = 0;
+    if (gLoomHeadless && !options[LOOP]) gLoomExecutionDone = 1;
 
 #ifdef __EMSCRIPTEN__
     emscripten_set_main_loop(loop, 0, 1);

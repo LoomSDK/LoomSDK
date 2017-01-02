@@ -45,7 +45,7 @@ if (MSVC)
 
     add_custom_command(TARGET unittest
         POST_BUILD
-        COMMAND echo f | xcopy /F /Y \"${UNITTESTBIN}\" \"${CMAKE_SOURCE_DIR}/tests/${UNITTESTBIN_DEST}.exe\"
+        COMMAND echo f | xcopy /F /Y \"${UNITTESTBIN}\" \"${CMAKE_SOURCE_DIR}/tests/${UNITTESTBIN_DEST}.exe\" | find /v "File(s) copied"
     )
 
 else ()

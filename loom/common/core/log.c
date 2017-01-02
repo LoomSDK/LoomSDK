@@ -47,6 +47,15 @@ typedef struct loom_log_listenerEntry
     struct loom_log_listenerEntry *next;
 } loom_log_listenerEntry_t;
 
+typedef struct loom_log_bufferEntry
+{
+    loom_logGroup_t *group;
+    loom_logLevel_t level;
+    // Don't forget to free!
+    const char *msg;
+    struct loom_log_bufferEntry *next;
+} loom_log_bufferEntry_t;
+
 // A log rule description contained in a linked list.
 typedef struct loom_log_rule
 {
@@ -56,11 +65,14 @@ typedef struct loom_log_rule
     struct loom_log_rule *next;
 } loom_log_rule_t;
 
-static loom_log_listenerEntry_t *listenerHead     = NULL;
-static loom_log_rule_t          *ruleHead         = NULL;
-static int              gLoomLogInvalidationToken = 1;
-static loom_allocator_t *gLoggerAllocator         = NULL;
-static loom_logLevel_t globalLevel                = LoomLogInfo;
+static loom_log_listenerEntry_t *listenerHead              = NULL;
+static loom_log_rule_t          *ruleHead                  = NULL;
+static int                       buffering                 = 0;
+static loom_log_bufferEntry_t   *bufferHead                = NULL;
+static loom_log_bufferEntry_t   *bufferTail                = NULL;
+static int                       gLoomLogInvalidationToken = 1;
+static loom_allocator_t         *gLoggerAllocator          = NULL;
+static loom_logLevel_t           globalLevel               = LoomLogInfo;
 
 static void platformDebugListener(void *payload, loom_logGroup_t *group, loom_logLevel_t level, const char *msg)
 {
@@ -70,7 +82,6 @@ static void platformDebugListener(void *payload, loom_logGroup_t *group, loom_lo
     // inappropriate argument substitution.
     platform_debugOut("%s", msg);
 }
-
 
 void loom_log_initialize()
 {
@@ -85,6 +96,24 @@ void loom_log_initialize()
     {
         loom_log_addListener(platformDebugListener, NULL);
     }
+}
+
+void loom_log_buffer()
+{
+    buffering = 1;
+}
+
+void loom_log_buffer_flush()
+{
+    if (!buffering) return;
+    buffering = 0;
+    while (bufferHead) {
+        loom_log_bufferEntry_t *be = bufferHead;
+        loom_log(be->group, be->level, "%s", be->msg);
+        lmFree(gLoggerAllocator, (void*)be->msg);
+        bufferHead = bufferHead->next;
+    }
+    bufferTail = NULL;
 }
 
 void loom_log_setGlobalLevel(loom_logLevel_t level)
@@ -136,7 +165,7 @@ void loom_log_removeListener(loom_logListener_t listener, void *payload)
 
         // Got it! Unlink and free.
         *entry = cur->next;
-        lmFree(NULL, cur);
+        lmFree(gLoggerAllocator, cur);
         return;
     } while ((entry = &((*entry)->next)));
 
@@ -158,7 +187,7 @@ int _vscprintf(const char *format, va_list pargs)
 // Don't forget to lmFree the returned buff
 char* loom_log_getArgs(va_list args, const char **format) {
     int count = _vscprintf(*format, args);
-    char* buff = (char*)lmAlloc(NULL, count + 2);
+    char* buff = (char*)lmAlloc(gLoggerAllocator, count + 2);
     #if LOOM_COMPILER == LOOM_COMPILER_MSVC
         vsprintf_s(buff, count + 1, *format, args);
     #else
@@ -173,11 +202,21 @@ void loom_log(loom_logGroup_t *group, loom_logLevel_t level, const char *format,
     char* buff;
     va_list args;
     
-    // sometimes we're not using the lmLog macros, so enforce good behavior.
-    if (!group->enabled)
+    if (buffering)
     {
+        lmLogArgs(args, buff, format);
+        loom_log_bufferEntry_t *be = lmAlloc(gLoggerAllocator, sizeof(loom_log_bufferEntry_t));
+        be->group = group;
+        be->level = level;
+        be->msg = buff;
+        be->next = NULL;
+        if (!bufferHead) bufferHead = be;
+        if (bufferTail) bufferTail->next = be;
+        bufferTail = be;
         return;
     }
+
+    if (!loom_log_willGroupLog(group)) return;
 
     if (level < group->filterLevel) return;
 
@@ -190,7 +229,7 @@ void loom_log(loom_logGroup_t *group, loom_logLevel_t level, const char *format,
         listener = listener->next;
     }
 
-    lmFree(NULL, buff);
+    lmFree(gLoggerAllocator, buff);
 
 }
 

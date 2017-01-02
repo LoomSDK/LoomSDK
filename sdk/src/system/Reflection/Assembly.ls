@@ -56,6 +56,13 @@ native class Assembly {
     public native function getName():String;
 
     /**
+     *  Gets the loom.config embedded in the assembly.
+     *
+     *  @return JSON string of the config file.
+     */
+    public native function getConfigJSON():String;
+
+    /**
      *  Gets the unique identifier of the assembly. This changes at every compilation
      *  so dependencies can be verified to be the same.
      *

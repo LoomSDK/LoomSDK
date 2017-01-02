@@ -501,6 +501,11 @@ package loom
          * Access to the copy of loom.config embedded in the application.
          */
         public static native var loomConfigJSON:String;
+
+        /**
+         * Apply a different loom.config to the application at runtime.
+         */
+        public static native function setConfigJSON(configJSON:String);
         
         /**
          * The version of Loom we're running against.

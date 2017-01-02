@@ -20,7 +20,7 @@ if (MSVC)
 
     add_custom_command(TARGET lsc
         POST_BUILD
-        COMMAND echo f | xcopy /F /Y \"${LSCBIN}\" \"${ARTIFACTS_DIR}/tools/lsc.exe\"
+        COMMAND echo f | xcopy /F /Y \"${LSCBIN}\" \"${ARTIFACTS_DIR}/tools/lsc.exe\" | find /v "File(s) copied"
     )
 
 else ()
