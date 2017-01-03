@@ -26,15 +26,32 @@ package loom.social
      * Loom provides access to the Parse API on mobile devices for social networking services.
      * Visit https://parse.com/ for more information
      *
-     *  In order to use Parse support in Loom, you must set both 
-     *  'parse_app_id' (unique App ID) and 'parse_client_key' 
+     *  In order to use Parse support in Loom, you must set your 
+     *  'parse_app_id' (unique App ID) and optionally the 'parse_client_key' 
      *  (unique Client Key) in your project's loom.config file.
-     *  These values are availble to you as a Parse Developer once 
-     *  you have created your App on https://parse.com/
+     *
+     *  For custom servers you must also set `parse_server` to the
+     *  base Parse URL, e.g. "https://example.com/parse/".
      *
      */
 
     import loom.HTTPRequest;
+    import loom.Application;
+    import loom.gameframework.LoomGroup;
+    import loom.gameframework.TimeManager;
+    import loom.gameframework.ITicked;
+
+    /**
+     * Small class which implements ITicked to handle
+     * running Parse ticks.
+     */
+    private class ParseTicker implements ITicked
+    {
+        function onTick():void
+        {
+            Parse.internalTick();
+        }
+    }
 
     /**
      * Static control class for accessing the Parse API functionality
@@ -84,18 +101,47 @@ package loom.social
         private static var timeoutDuration = 10000;                                //Time in ms before a request is considered to have timed out. 0 = no timeout.
         private static var requestDelay = 50;                                      //Delay in ms between queued HTTPrequests being sent.
 
-        public static var apiBase:String = "https://api.parse.com/1/";   //Base REST URL for Parse.
+        private static var apiBase:String;                                         //Base REST URL for Parse.
         private static const REQUEST_BUFFER_LENGTH = 20;                           //We keep a buffer of sent HTTPRequests to prevent them from being GC'd before they can complete.
 
         private static var dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";            //Parse date format string
         private static var nextTick:Number;
         private static var nextTimeout:Number=0;
 
+        private static var ticker:ParseTicker;
+        private static var deprecatedTickWarned:Boolean = false;
+
+        private static var initialized:Boolean = false;
 
         /**
          *  Called when the any REST operation times out.
          */
         public static var REST_onTimeout:Function;
+
+        /**
+         * Initializes Parse for further use.
+         * You can call this once on application startup to initialize Parse
+         * in advance, otherwise it is initialized on first use.
+         */
+        public static function initialize()
+        {
+            if (initialized) return;
+            initialized = true;
+
+            var config = JSON.parse(Application.loomConfigJSON);
+            parseAppID = config.getString("parse_app_id");
+            parseRESTKey = config.getString("parse_client_key");
+            apiBase = config.getString("parse_server");
+            requestQueue = new Vector.<HTTPRequest>;
+            activeQueryQueue = new Vector.<HTTPRequest>;
+            nextTick = Platform.getTime()+requestDelay;
+
+            if (!ticker) {
+                ticker = new ParseTicker();
+                var timeManager = LoomGroup.rootGroup.getManager(TimeManager) as TimeManager;
+                timeManager.addTickedObject(ticker);
+            }
+        }
 
 
         /**
@@ -295,6 +341,8 @@ package loom.social
          */
         public static function POST(URL:String="", data:JSON=null, success:Function=null, failure:Function=null)
         {            
+            if (!initialized) initialize();
+
             var req = new HTTPRequest(apiBase+URL,"application/json");            
             req.method = "POST";
             
@@ -375,7 +423,9 @@ package loom.social
          *  @param failure - delegate function to run on request failure
          */
         public static function GET(URL:String, jsonData:JSON = null, urlData:String = "", success:Function=null, failure:Function=null)
-        {           
+        {
+            if (!initialized) initialize();
+
             var url = apiBase+URL;       
 
             if(!String.isNullOrEmpty(urlData))
@@ -387,7 +437,10 @@ package loom.social
             req.method = "GET";
             
             req.setHeaderField("X-Parse-Application-Id", parseAppID);
-            req.setHeaderField("X-Parse-REST-API-Key", parseRESTKey);  
+            req.setHeaderField("X-Parse-REST-API-Key", parseRESTKey);
+            if (URL == "login") {
+                req.setHeaderField("X-Parse-Installation-Id", getInstallationID());
+            }
             
             if(!String.isNullOrEmpty(parseSessionToken))          
                 req.setHeaderField("X-Parse-Session-Token", parseSessionToken); 
@@ -403,7 +456,7 @@ package loom.social
                 req.onSuccess += success;
             if(failure != null)
                 req.onFailure += failure;
-                        
+            
             requestQueue.push(req);
         }
 
@@ -451,9 +504,25 @@ package loom.social
         }
 
         /**
+         * Deprecated: this is now handled internally.
+         *
          * Check current time, fire off requests and trigger timeouts where necessary
+         * @deprecated
          */
-        public static function tick() 
+        public static function tick()
+        {
+            if (!deprecatedTickWarned) {
+                trace("Deprecation Warning: You can remove all calls to Parse.tick() as it is now handled internally.");
+                deprecatedTickWarned = true;
+            }
+        }
+
+        /**
+         * Internal function that gets called to run requests and timeouts.
+         *
+         * @private 
+         */
+        public static function internalTick() 
         {
             var currentTick = Platform.getTime();
             

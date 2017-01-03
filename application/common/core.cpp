@@ -648,9 +648,9 @@ Functions called by JNI
 
 void loom_set_javavm(void *vm);
 
-/* Called before SDL_main() to initialize JNI bindings in SDL library */
 extern "C" {
 
+    /* Called before SDL_main() to initialize JNI bindings in SDL library */
     extern void SDL_Android_Init(JNIEnv* env, jclass cls);
     void loom_setAssetManager(AAssetManager *am);
 
