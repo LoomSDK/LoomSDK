@@ -3,7 +3,9 @@ package ui
     import feathers.controls.Button;
     import feathers.controls.Check;
     import feathers.controls.Label;
+    import feathers.controls.TextInput;
     import feathers.core.DisplayListWatcher;
+    import feathers.display.Scale9Image;
     import feathers.skins.SmartDisplayObjectStateValueSelector;
     import feathers.text.BitmapFontTextFormat;
     import feathers.text.TextFormatAlign;
@@ -23,6 +25,8 @@ package ui
     {
         public const DEFAULT_SCALE9_GRID:Rectangle = new Rectangle(5, 5, 10, 10);
         
+        public var scale:Number;
+
         public var textFormat:BitmapFontTextFormat;
         public var textFormatBig:BitmapFontTextFormat;
         public var textFormatLight:BitmapFontTextFormat;
@@ -32,6 +36,7 @@ package ui
         
         public var buttonUp:Scale9Textures;
         public var buttonDown:Scale9Textures;
+        public var backgroundSkinTextures:Scale9Textures;
         
         public function Theme(container:DisplayObjectContainer = null)
         {
@@ -55,7 +60,7 @@ package ui
             TextField.registerBitmapFont(BitmapFont.load(font), "main");
             
             // Simple text scaling control for the formats below.
-            var scale = 4;
+            scale = 4;
             
             // All the different formats used below are defined here.
             textFormat = new BitmapFontTextFormat("main", 8*scale, 0x000000);
@@ -73,6 +78,7 @@ package ui
             
             buttonUp = background9;
             buttonDown = backgroundDown9;
+            backgroundSkinTextures = background9;
             
             // Assign control factories for each style.
             setInitializerForClass(Label, labelInitializer);
@@ -83,6 +89,7 @@ package ui
             setInitializerForClass(Button, buttonInitializer);
             setInitializerForClass(Button, buttonInitializerBig, "big");
             setInitializerForClass(Button, buttonInitializerDark, "dark");
+            setInitializerForClass(TextInput, textInputInitializer);
         }
         
         /**
@@ -178,6 +185,27 @@ package ui
             this.baseButtonInitializer(button);
             button.defaultLabelProperties["textFormat"] = textFormatLight;
             button.downLabelProperties["textFormat"] = textFormat;
+        }
+
+        protected function textInputInitializer(input:TextInput):void
+        {
+            const backgroundSkin:Scale9Image = new Scale9Image(this.backgroundSkinTextures, this.scale);
+            backgroundSkin.width = 264 * this.scale;
+            backgroundSkin.height = 60 * this.scale;
+
+            input.backgroundSkin = backgroundSkin;
+            input.backgroundDisabledSkin = backgroundSkin;
+            input.backgroundFocusedSkin = backgroundSkin;
+
+            input.minWidth = input.minHeight = 4 * this.scale;
+            // input.minTouchWidth = input.minTouchHeight = 88 * this.scale;
+            input.paddingTop = 4 * this.scale;
+            input.paddingBottom = 4 * this.scale;
+            input.paddingLeft = input.paddingRight = 4 * this.scale;
+            input.textEditorProperties["textFormat"] = this.textFormat;
+
+            input.promptProperties["textFormat"] = this.textFormat;
+            input.promptProperties["embedFonts"] = true;
         }
         
     }

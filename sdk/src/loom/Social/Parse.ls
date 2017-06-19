@@ -206,9 +206,9 @@ package loom.social
          *  @param success - delegate function to run on request success
          *  @param failure - delegate function to run on request failure
          */
-        public static function REST_OauthLogin(oauthJSON:JSON = null, success:Function=null, failure:Function=null)
+        public static function REST_OauthLogin(oauthJSON:JSON = null, success:Function=null, failure:Function=null):HTTPRequest
         {
-            POST("users",oauthJSON,success,failure);
+            return POST("users",oauthJSON,success,failure);
         }
 
         /**
@@ -219,10 +219,10 @@ package loom.social
          *  @param success - delegate function to run on request success
          *  @param failure - delegate function to run on request failure
          */
-        public static function REST_loginWithUsername(userName:String, password:String, success:Function=null, failure:Function=null)
+        public static function REST_loginWithUsername(userName:String, password:String, success:Function=null, failure:Function=null):HTTPRequest
         {                       
             var arguments = "username="+userName+"&password="+password;
-            GET("login",null,arguments,success,failure);
+            return GET("login",null,arguments,success,failure);
         }
 
         /**
@@ -232,9 +232,9 @@ package loom.social
          *  @param success - delegate function to run on request success
          *  @param failure - delegate function to run on request failure
          */
-        public static function REST_signupWithUsername(signupParameters:JSON = null, success:Function=null, failure:Function=null)
+        public static function REST_signupWithUsername(signupParameters:JSON = null, success:Function=null, failure:Function=null):HTTPRequest
         {            
-            POST("users",signupParameters,success,failure);
+            return POST("users",signupParameters,success,failure);
         }
 
         /**
@@ -244,9 +244,9 @@ package loom.social
          *  @param success - delegate function to run on request success
          *  @param failure - delegate function to run on request failure
          */
-        public static function REST_requestPasswordReset(resetParams:JSON,success:Function = null,failure:Function = null)
+        public static function REST_requestPasswordReset(resetParams:JSON,success:Function = null,failure:Function = null):HTTPRequest
         {            
-            POST("requestPasswordReset",resetParams,success,failure);
+            return POST("requestPasswordReset",resetParams,success,failure);
         }
 
         /**
@@ -257,9 +257,9 @@ package loom.social
          *  @param success - delegate function to run on request success
          *  @param failure - delegate function to run on request failure
          */     
-        public static function REST_callCloudFunction(functionName:String, functionParameters:JSON = null, success:Function=null, failure:Function=null)
+        public static function REST_callCloudFunction(functionName:String, functionParameters:JSON = null, success:Function=null, failure:Function=null):HTTPRequest
         {                       
-            POST("functions/"+functionName,functionParameters,success,failure);
+            return POST("functions/"+functionName,functionParameters,success,failure);
         }       
         
         /**
@@ -268,9 +268,9 @@ package loom.social
          *  @param success - delegate function to run on request success
          *  @param failure - delegate function to run on request failure
          */   
-        public static function REST_getCurrentUser(success:Function=null,failure:Function=null)
+        public static function REST_getCurrentUser(success:Function=null,failure:Function=null):HTTPRequest
         {
-            GET("users/me",null,"",success,failure);
+            return GET("users/me",null,"",success,failure);
         }
 
         /**
@@ -281,9 +281,9 @@ package loom.social
          *  @param success - delegate function to run on request success
          *  @param failure - delegate function to run on request failure
          */
-        public static function REST_createObject(objectName:String,additionalData:JSON = null,success:Function = null, failure:Function=null)
+        public static function REST_createObject(objectName:String,additionalData:JSON = null,success:Function = null, failure:Function=null):HTTPRequest
         {           
-            POST("classes/"+objectName,additionalData,success,failure);
+            return POST("classes/"+objectName,additionalData,success,failure);
         }
 
         /**
@@ -294,9 +294,9 @@ package loom.social
          *  @param success - delegate function to run on request success
          *  @param failure - delegate function to run on request failure
          */
-        public static function REST_retrieveObject(objectName:String,objectID:String,success:Function = null, failure:Function=null)
+        public static function REST_retrieveObject(objectName:String,objectID:String,success:Function = null, failure:Function=null):HTTPRequest
         {           
-            GET("classes/"+objectName+"/"+objectID,null,"",success,failure);
+            return GET("classes/"+objectName+"/"+objectID,null,"",success,failure);
         }
 
         /**
@@ -308,9 +308,9 @@ package loom.social
          *  @param success - delegate function to run on request success
          *  @param failure - delegate function to run on request failure
          */
-        public static function REST_updateObject(objectName:String,objectID:String,updateData:JSON = null,success:Function = null, failure:Function=null)
+        public static function REST_updateObject(objectName:String,objectID:String,updateData:JSON = null,success:Function = null, failure:Function=null):HTTPRequest
         {           
-            PUT("classes/"+objectName+"/"+objectID,updateData,success,failure);
+            return PUT("classes/"+objectName+"/"+objectID,updateData,success,failure);
         }
 
         /**
@@ -321,9 +321,9 @@ package loom.social
          *  @param success - delegate function to run on request success
          *  @param failure - delegate function to run on request failure
          */
-        public static function REST_makeQuery(objectName:String,queryString:String,success:Function = null, failure:Function = null)
+        public static function REST_makeQuery(objectName:String,queryString:String,success:Function = null, failure:Function = null):HTTPRequest
         {            
-            GET("classes/"+objectName,null,queryString,success,failure);
+            return GET("classes/"+objectName,null,queryString,success,failure);
         }
         
 
@@ -339,7 +339,7 @@ package loom.social
          *  @param success - delegate function to run on request success
          *  @param failure - delegate function to run on request failure
          */
-        public static function POST(URL:String="", data:JSON=null, success:Function=null, failure:Function=null)
+        public static function POST(URL:String="", data:JSON=null, success:Function=null, failure:Function=null):HTTPRequest
         {            
             if (!initialized) initialize();
 
@@ -371,6 +371,8 @@ package loom.social
                 req.onSuccess += success;
 
             requestQueue.push(req);
+
+            return req;
         }
 
         /**
@@ -381,7 +383,7 @@ package loom.social
          *  @param success - delegate function to run on request success
          *  @param failure - delegate function to run on request failure
          */
-        public static function PUT(URL:String="", data:JSON=null, success:Function=null, failure:Function=null)
+        public static function PUT(URL:String="", data:JSON=null, success:Function=null, failure:Function=null):HTTPRequest
         {         
             var req = new HTTPRequest(apiBase+URL,"application/json");            
             req.method = "PUT";
@@ -411,6 +413,8 @@ package loom.social
                 req.onSuccess += success;
 
             requestQueue.push(req);
+
+            return req;
         }
         
         /**
@@ -422,7 +426,7 @@ package loom.social
          *  @param success - delegate function to run on request success
          *  @param failure - delegate function to run on request failure
          */
-        public static function GET(URL:String, jsonData:JSON = null, urlData:String = "", success:Function=null, failure:Function=null)
+        public static function GET(URL:String, jsonData:JSON = null, urlData:String = "", success:Function=null, failure:Function=null):HTTPRequest
         {
             if (!initialized) initialize();
 
@@ -458,6 +462,8 @@ package loom.social
                 req.onFailure += failure;
             
             requestQueue.push(req);
+
+            return req;
         }
 
 

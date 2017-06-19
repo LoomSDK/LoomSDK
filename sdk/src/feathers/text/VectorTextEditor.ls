@@ -14,7 +14,7 @@ package feathers.text
     import loom2d.math.Point;
     import loom2d.math.Rectangle;
     import loom2d.events.Event;
-    import loom2d.events.EnterFrameEvent;
+    import loom2d.events.ResizeEvent;
     import loom2d.animation.DelayedCall;
     import feathers.core.ITextEditor;
     import feathers.events.FeathersEventType;    
@@ -62,6 +62,11 @@ package feathers.text
          * this is the Y value of the scroll. Only used on Android for now. iOS uses the SDL provided scroll.
          */
         private var _stageTargetY:Number = 0;
+        
+        /**
+         * The original position of the stage is stored so it can be restored when the IME closes.
+         */
+        private static var _stageOriginY:Number = NaN;
 
         /**
          * Tracks the current editor, this is important as there may be a number
@@ -164,45 +169,42 @@ package feathers.text
                 {
                     _keyboardState = KEYBOARD_OPENED;
 
-                    // resize is in device points, so we need to scale by stageHeight
-                    var scale = stage.stageHeight / stage.nativeStageHeight;
-                    resize *= scale;
-                    
                     // find the bounds of the text edit field, used to test if 
                     // we're obscured or not (and thus need to scroll)
                     var bounds = getBounds(stage);
-                    
-                    // detect whether we need to scroll
-                    if ((stage.stageHeight - bounds.bottom) < (resize + _keyboardSafeZone))
-                    {
-                        // we need to scroll!  We do this with some animation
-                        // so the user's eye can follow what is happening
-                        panStage(bounds, resize, scale);
-                    } else {
-                        panStage();
-                    }
+                    panStage(bounds, resize);
                 }
                  
             }
         }
         
+        protected function onSizeChange(e:ResizeEvent)
+        {
+            _stageOriginY = stage.y;
+        }
+        
         /**
-         * Pans/scrolls the stage based on the provided text field bounds, keyboard size
-         * and display scale.
+         * Pans/scrolls the stage based on the provided text field bounds and
+         * keyboard size.
          * @param bounds    The bounds of the text field to pan to.
          * @param keyboardSize  The height of the soft keyboard.
          * @param scale The display scale to convert from stage points to device points.
          */
-        protected function panStage(bounds:Rectangle = null, keyboardSize:Number = 0, scale:Number = 1)
+        protected function panStage(bounds:Rectangle = null, keyboardSize:Number = 0)
         {
             if (bounds) {
-                //trace("Panning stage to field");
-                _stageTargetY = (stage.stageHeight - keyboardSize - bounds.bottom - _keyboardSafeZone) / scale;
+                var potentialTarget = stage.nativeStageHeight - keyboardSize - bounds.bottom * stage.scaleY - _keyboardSafeZone;
+                if (potentialTarget >= stage.y) return;
+                // trace("Panning stage to field", stage.y, _stageOriginY, _stageTargetY, "target", potentialTarget, "kbsize", keyboardSize, bounds.bottom);
+                _stageTargetY = potentialTarget;
+                _stageOriginY = stage.y;
                 Loom2D.juggler.removeTweens(stage);
                 Loom2D.juggler.tween(stage, 0.2, { y: _stageTargetY, transition: Transitions.EASE_OUT } );
             } else {
-                //trace("Panning stage to origin");
-                _stageTargetY = 0;
+                if (isNaN(_stageOriginY)) return;
+                // trace("Panning stage to origin", stage.y, _stageOriginY, _stageTargetY);
+                _stageTargetY = _stageOriginY;
+                _stageOriginY = NaN;
                 Loom2D.juggler.removeTweens(stage);
                 Loom2D.juggler.tween(stage, 0.3, { y: _stageTargetY, transition: Transitions.EASE_IN_OUT } );
             }
@@ -526,6 +528,7 @@ package feathers.text
         private function onCursorAddedToStage( e:Event ):void
         {
             Loom2D.juggler.add( _cursorDelayedCall );
+            stage.addEventListener( Event.RESIZE, onSizeChange);
         }
         
         /**
@@ -534,6 +537,7 @@ package feathers.text
         private function onCursorRemovedFromStage( e:Event ):void
         {
             Loom2D.juggler.remove( _cursorDelayedCall );
+            Loom2D.stage.removeEventListener( Event.RESIZE, onSizeChange);
         }
         
         /**

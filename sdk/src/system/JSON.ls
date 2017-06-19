@@ -73,14 +73,14 @@ native class JSON {
     /**
      * Convenience function will parse a JSON string and return a JSON object. This is functionally the
      * same as creating initializing a new JSON Loom object and loading a string into it, but this function
-     * will assert "JSON failed to load" if the call to `loadString` fails.
+     * will return `null` if the call to `loadString` fails.
      *
      * @param json  The JSON string to be parsed.
      * @return The JSON object parsed from the string.
      */
     public static function parse(json:String):JSON {
         var j = new JSON();
-        Debug.assert(j.loadString(json), "JSON failed to load");
+        if (!j.loadString(json)) return null;
         return j;
     }
     

@@ -8,11 +8,12 @@ package feathers.text
     import loom2d.display.Quad;
     import loom2d.display.DisplayObject;
     import loom2d.display.Stage;
+    import loom2d.events.ResizeEvent;
     import loom2d.math.Point;
     import loom2d.math.Rectangle;
     import loom2d.events.Event;
-    import loom2d.events.EnterFrameEvent;
     import loom2d.animation.DelayedCall;
+    import loom2d.animation.Transitions;
     import feathers.core.ITextEditor;
     import feathers.events.FeathersEventType;    
     import feathers.text.TextFormatAlign;
@@ -30,9 +31,19 @@ package feathers.text
         protected var _hasIMEFocus:Boolean = false;
         protected var _cursorDelayedCall:DelayedCall;
 
-        // the stage is scrolled when bringing up IME text entry and the text editor is obscured
-        // this is the Y value of the scroll 
+        /**
+         * The stage is scrolled when bringing up IME text entry and the text editor is obscured 
+         * this is the Y value of the scroll. Only used on Android for now. iOS uses the SDL provided scroll.
+         */
         private var _stageTargetY:Number = 0;
+
+        /**
+         * The original position of the stage is stored so it can be restored when the IME closes.
+         */
+        private static var _stageOriginY:Number = NaN;
+
+        /** The margin between the bottom of the text field and the top of the soft keyboard. */
+        protected var _keyboardSafeZone = 16;
 
         // tracks the current bitmap font editor, this is important as there may be a number
         // of editors on the screen and the user can switch between them by selecting them
@@ -66,6 +77,36 @@ package feathers.text
                 _currentEditor = null;
         }
 
+        protected function onSizeChange(e:ResizeEvent)
+        {
+            _stageOriginY = stage.y;
+        }
+        
+        /**
+         * Pans/scrolls the stage based on the provided text field bounds and
+         * keyboard size.
+         * @param bounds    The bounds of the text field to pan to.
+         * @param keyboardSize  The height of the soft keyboard.
+         * @param scale The display scale to convert from stage points to device points.
+         */
+        protected function panStage(bounds:Rectangle = null, keyboardSize:Number = 0)
+        {
+            if (bounds) {
+                var potentialTarget = stage.nativeStageHeight - keyboardSize - bounds.bottom * stage.scaleY - _keyboardSafeZone;
+                if (potentialTarget >= stage.y) return;
+                _stageTargetY = potentialTarget;
+                _stageOriginY = stage.y;
+                Loom2D.juggler.removeTweens(stage);
+                Loom2D.juggler.tween(stage, 0.2, { y: _stageTargetY, transition: Transitions.EASE_OUT } );
+            } else {
+                if (isNaN(_stageOriginY)) return;
+                _stageTargetY = _stageOriginY;
+                _stageOriginY = NaN;
+                Loom2D.juggler.removeTweens(stage);
+                Loom2D.juggler.tween(stage, 0.3, { y: _stageTargetY, transition: Transitions.EASE_IN_OUT } );
+            }
+        }
+
         protected function onAppEvent(type:String, payload:String)        
         {
             if (type == ApplicationEvents.KEYBOARD_RESIZE)
@@ -77,10 +118,7 @@ package feathers.text
                 // if we're closing the IME text entry box, undo the stage shift
                 if (resize == 0)
                 {
-                    // ensure that the stage scroll is reset and clear our frame listener
-                    stage.y = 0;
-                    _stageTargetY = 0;
-                    stage.removeEventListener(Event.ENTER_FRAME, enterFrameHandler);
+                    panStage();
 
                     // if we're the current editor AND we have focus, clear it
                     if (_currentEditor == this && _hasIMEFocus)
@@ -90,63 +128,12 @@ package feathers.text
                     }
                 }
                 else if (_hasIMEFocus)
-                {                        
-
-                    // resize is in device points, so we need to scale by stageHeight
-                    var scale = stage.nativeStageHeight / stage.stageHeight;
-                    resize = (resize) * scale;
-
-                    // find the bounds of the text edit field, used to test if 
-                    // we're obscured or not (and thus need to scroll)
+                {
                     var bounds = getBounds(stage);
-
-                    // detect whether we need to scroll
-                    if ((stage.height - bounds.bottom) < (resize + 16))
-                    {
-                        // we need to scroll!  We do this with some animation
-                        // so the user's eye can follow what is happening
-                        stage.addEventListener(Event.ENTER_FRAME, enterFrameHandler);
-                        _stageTargetY = (-resize) + (stage.height - bounds.bottom);
-
-                        // 16 pixel "safe zone"
-                        _stageTargetY -= height + 16; 
-                    }
-
-                    // and mark us as the current editor
-                    _currentEditor = this;
-
+                    panStage(bounds, resize);
                 }
                  
             }            
-
-        }
-
-        protected function enterFrameHandler(event:Event):void
-        {
-            if (!_hasIMEFocus)
-                return;
-            
-            var stage = Loom2D.stage;
-
-            // if we're animating a stage scroll, do so
-            if (stage.y != _stageTargetY)
-            {
-                var frameEvent = event as EnterFrameEvent;
-
-                var delta =  stage.y - _stageTargetY;
-                var delta2 = delta * frameEvent.passedTime * 10;
-
-                // if the delta is too big or too small, clamp
-                if (delta2 > delta || delta < 2)
-                    delta2 = delta;
-
-                stage.y -= delta2;
-            }
-            else
-            {
-                // we don't need to listen anymore so save some frame bandwidth
-                stage.removeEventListener(Event.ENTER_FRAME, enterFrameHandler);
-            }
 
         }
 
@@ -349,11 +336,13 @@ package feathers.text
         private function onCursorAddedToStage( e:Event ):void
         {
             Loom2D.juggler.add( _cursorDelayedCall );
+            stage.addEventListener( Event.RESIZE, onSizeChange);
         }
         
         private function onCursorRemovedFromStage( e:Event ):void
         {
             Loom2D.juggler.remove( _cursorDelayedCall );
+            Loom2D.stage.removeEventListener( Event.RESIZE, onSizeChange);
         }
         
         private function toggleCursorVisibility():void

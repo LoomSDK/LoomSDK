@@ -7,6 +7,7 @@ package
     import ui.Theme;
     import feathers.controls.Button;
     import feathers.controls.Label;
+    import feathers.controls.TextInput;
 
     /**
       * Feathers can be complicated, especially with themes, so this example
@@ -98,6 +99,22 @@ package
             darkButton.label = "Dark buttoN";
             darkButton.nameList.add("dark");
             container.addChild(darkButton);
+
+            var upperTextInput = new TextInput();
+            upperTextInput.prompt = "Text input";
+            upperTextInput.x = 130;
+            upperTextInput.y = 80;
+            upperTextInput.width = 80;
+            upperTextInput.height = 20;
+            container.addChild(upperTextInput);
+
+            var lowerTextInput = new TextInput();
+            lowerTextInput.prompt = "Text input";
+            lowerTextInput.x = 130;
+            lowerTextInput.y = 120;
+            lowerTextInput.width = 80;
+            lowerTextInput.height = 20;
+            container.addChild(lowerTextInput);
 
         }
     }
