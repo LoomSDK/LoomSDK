@@ -104,7 +104,7 @@ if (APPLE)
                 "-framework FacebookSDK -F ${CMAKE_SOURCE_DIR}/loom/vendor/facebook/ios"
 
                 # Teak (NOTE: Requires FacebookSDK)
-                "-framework Carrot -F ${CMAKE_SOURCE_DIR}/loom/vendor/teak/ios"
+                # "-framework Carrot -F ${CMAKE_SOURCE_DIR}/loom/vendor/teak/ios"
 
                 # Parse (NOTE: Requires FacebookSDK)
                 "-framework Parse -F ${CMAKE_SOURCE_DIR}/loom/vendor/parse/ios"
