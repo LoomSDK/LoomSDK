@@ -61,7 +61,7 @@ CFG =
 
     # Whether or not to include Admob and/or Facebook in the build... for Great Apple Compliance!
     BUILD_ADMOB: 0,
-    BUILD_FACEBOOK: 0,
+    BUILD_FACEBOOK: 1,
 
     # Allow disabling Loom doc generation, as it can be very slow.
     # Disabled by default, set environment variable 'LOOM_BUILD_DOCS'
