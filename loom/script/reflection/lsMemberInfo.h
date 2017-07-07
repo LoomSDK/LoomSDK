@@ -296,7 +296,7 @@ protected:
 public:
 
     MemberInfo() :
-        declaringType(NULL), reflectedType(NULL), type(NULL), ordinal(0), lineNumber(0), templateInfo(NULL), missing(false)
+        declaringType(NULL), reflectedType(NULL), type(NULL), ordinal(0), templateInfo(NULL), lineNumber(0), missing(false)
     {
     }
 

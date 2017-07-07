@@ -22,7 +22,6 @@ limitations under the License.
 #import <UIKit/UIKit.h>
 #import <Foundation/NSSet.h>
 #import "Carrot.h"
-#import "application/ios/AppController.h"
 
 #include "loom/common/platform/platform.h"
 #include "loom/common/platform/platformTeak.h"
