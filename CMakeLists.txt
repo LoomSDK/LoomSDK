@@ -28,10 +28,11 @@ set (LOOM_INCLUDE_FOLDERS
     ${CMAKE_SOURCE_DIR}/loom/vendor/geldreich
     ${CMAKE_SOURCE_DIR}/loom/vendor/jansson
     ${CMAKE_SOURCE_DIR}/loom/vendor/jemalloc-4.0.1/include
-    ${CMAKE_SOURCE_DIR}/loom/vendor/teak/ios/Carrot.framework/Headers
+    # ${CMAKE_SOURCE_DIR}/loom/vendor/teak/ios/Carrot.framework/Headers
     ${CMAKE_SOURCE_DIR}/loom/vendor/sqlite3
-    ${CMAKE_SOURCE_DIR}/loom/vendor/facebook/ios/FacebookSDK.framework/Headers
-    ${CMAKE_SOURCE_DIR}/loom/vendor/parse/ios/Parse.framework/Headers
+    # ${CMAKE_SOURCE_DIR}/loom/vendor/facebook/ios/FacebookSDK.framework/Headers
+    ${CMAKE_SOURCE_DIR}/loom/vendor/parse/ios/Parse.framework
+    ${CMAKE_SOURCE_DIR}/loom/vendor/parse/ios/Bolts.framework
     ${CMAKE_SOURCE_DIR}/loom/vendor/dxsdk/Include
     )
 
@@ -219,7 +220,7 @@ if(APPLE)
         set(CMAKE_EXE_LINKER_FLAGS "-framework Foundation -lz -framework QuartzCore -framework MediaPlayer -lxml2")
 
         set(CMAKE_OSX_SYSROOT iphoneos$(LOOM_IOS_VERSION) )
-        set(CMAKE_OSX_ARCHITECTURES "armv7;armv7s;arm64")
+        set(CMAKE_OSX_ARCHITECTURES "armv7;arm64")
         set(CMAKE_XCODE_EFFECTIVE_PLATFORMS "-iphoneos;-iphonesimulator")
 
         set (LOOM_SDL2_LIB ${CMAKE_SOURCE_DIR}/build/sdl2/ios/libSDL2.a)

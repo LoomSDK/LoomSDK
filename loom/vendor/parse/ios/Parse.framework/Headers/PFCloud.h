@@ -1,47 +1,49 @@
-//
-//  PFCloud.h
-//  Parse
-//
-//  Created by Shyam Jayaraman on 8/20/12.
-//  Copyright (c) 2012 Parse Inc. All rights reserved.
-//
+/**
+ * Copyright (c) 2015-present, Parse, LLC.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ */
 
 #import <Foundation/Foundation.h>
-#import "PFConstants.h"
 
+#import <Bolts/BFTask.h>
+
+#import <Parse/PFConstants.h>
+
+NS_ASSUME_NONNULL_BEGIN
+
+/**
+ The `PFCloud` class provides methods for interacting with Parse Cloud Functions.
+ */
 @interface PFCloud : NSObject
 
-/*!
- Calls the given cloud function with the parameters passed in.
- @param function The function name to call.
- @param parameters The parameters to send to the function.
- @result The response from the cloud function.
- */
-+ (id)callFunction:(NSString *)function withParameters:(NSDictionary *)parameters;
+/**
+ Calls the given cloud function *asynchronously* with the parameters provided.
 
-/*!
- Calls the given cloud function with the parameters passed in and sets the error if there is one.
  @param function The function name to call.
  @param parameters The parameters to send to the function.
- @param error Pointer to an NSError that will be set if necessary.
- @result The response from the cloud function.  This result could be a NSDictionary, an NSArray, NSInteger or NSString.
- */
-+ (id)callFunction:(NSString *)function withParameters:(NSDictionary *)parameters error:(NSError **)error;
 
-/*!
- Calls the given cloud function with the parameters provided asynchronously and calls the given block when it is done.
- @param function The function name to call.
- @param parameters The parameters to send to the function.
- @param block The block to execute. The block should have the following argument signature:(id result, NSError *error).
+ @return The task, that encapsulates the work being done.
  */
-+ (void)callFunctionInBackground:(NSString *)function withParameters:(NSDictionary *)parameters block:(PFIdResultBlock)block;
++ (BFTask<id> *)callFunctionInBackground:(NSString *)function
+                          withParameters:(nullable NSDictionary *)parameters;
 
-/*!
- Calls the given cloud function with the parameters provided asynchronously and runs the callback when it is done.
+/**
+ Calls the given cloud function *asynchronously* with the parameters provided
+ and executes the given block when it is done.
+
  @param function The function name to call.
  @param parameters The parameters to send to the function.
- @param target The object to call the selector on.
- @param selector The selector to call. It should have the following signature: (void)callbackWithResult:(id) result error:(NSError *)error. result will be nil if error is set and vice versa.
+ @param block The block to execute when the function call finished.
+ It should have the following argument signature: `^(id result, NSError *error)`.
  */
-+ (void)callFunctionInBackground:(NSString *)function withParameters:(NSDictionary *)parameters target:(id)target selector:(SEL)selector;
++ (void)callFunctionInBackground:(NSString *)function
+                  withParameters:(nullable NSDictionary *)parameters
+                           block:(nullable PFIdResultBlock)block;
+
 @end
+
+NS_ASSUME_NONNULL_END

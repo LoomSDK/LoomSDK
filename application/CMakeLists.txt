@@ -102,12 +102,6 @@ if (APPLE)
             target_link_libraries(${PROJECT_NAME} 
                 # Facebook
                 "-framework FacebookSDK -F ${CMAKE_SOURCE_DIR}/loom/vendor/facebook/ios"
-
-                # Teak (NOTE: Requires FacebookSDK)
-                # "-framework Carrot -F ${CMAKE_SOURCE_DIR}/loom/vendor/teak/ios"
-
-                # Parse (NOTE: Requires FacebookSDK)
-                "-framework Parse -F ${CMAKE_SOURCE_DIR}/loom/vendor/parse/ios"
             )
         endif()
 
@@ -146,6 +140,9 @@ if (APPLE)
           "-framework CoreAudio"
 
           "-framework GameController"
+
+          "-framework Parse -F ${CMAKE_SOURCE_DIR}/loom/vendor/parse/ios"
+          "-framework Bolts -F ${CMAKE_SOURCE_DIR}/loom/vendor/parse/ios"
 
           "-ObjC"
           "-lc++"

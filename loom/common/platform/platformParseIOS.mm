@@ -23,7 +23,7 @@ limitations under the License.
 #if LOOM_PLATFORM == LOOM_PLATFORM_IOS
 
 #import <UIKit/UIKit.h>
-#include "Parse.h"
+#import <Parse/Parse.h>
 
 #include "loom/common/platform/platform.h"
 #include "loom/common/platform/platformParse.h"
@@ -31,28 +31,44 @@ limitations under the License.
 #include "loom/common/core/log.h"
 #include "loom/common/core/assert.h"
 #include "loom/vendor/jansson/jansson.h"
-
+#include "loom/vendor/sdl2/src/video/uikit/SDL_uikitappdelegate.h"
 
 
 static bool _initialized = false;
 
-
 @implementation ParseAPIiOS
 
 
--(void) initialize
++(void) initialize
 {
+    if (_initialized) return;
+
     NSBundle *mainBundle = [NSBundle mainBundle];
     NSString *app_id = [mainBundle objectForInfoDictionaryKey:@"ParseAppID"];
     NSString *client_key = [mainBundle objectForInfoDictionaryKey:@"ParseClientKey"];
-    NSLog(@"-----Info.plist Parse Strings: %@ %@", app_id, client_key);
+    NSString *server = [mainBundle objectForInfoDictionaryKey:@"ParseServer"];
+    // NSLog(@"-----Info.plist Parse Strings: %@ %@", app_id, client_key);
 
     //don't initialize without valid strings
     _initialized = false;
-    if(app_id != nil && ([app_id isEqualToString:@""] == FALSE) && client_key != nil && ([client_key isEqualToString:@""] == FALSE))
+    
+    if(app_id != nil && ([app_id isEqualToString:@""] == FALSE))
     {
-        NSLog(@"-----Initializing Parse");
-        [Parse setApplicationId:app_id clientKey:client_key];
+        // NSLog(@"-----Initializing Parse");
+
+        [Parse initializeWithConfiguration:[ParseClientConfiguration configurationWithBlock:^(id<ParseMutableClientConfiguration>  _Nonnull configuration) {
+            configuration.applicationId = app_id;
+
+            if(client_key != nil && ([client_key isEqualToString:@""] == FALSE)) {
+                configuration.clientKey = client_key;
+            }
+            
+            configuration.server = server;
+
+            // Enable storing and querying data from Local Datastore. Remove this line if you don't want to
+            // use Local Datastore features or want to use cachePolicy.
+            configuration.localDatastoreEnabled = YES;
+        }]];
 
         //register for remote notifications with the system... different for iOS8+ though!
         //we need to make sure not to compile in any mention of UIUserNotificationSetting if we are on an older Xcode!            
@@ -80,11 +96,11 @@ static bool _initialized = false;
                                                                                     UIRemoteNotificationTypeSound];    
         }
         _initialized = true;
-        NSLog(@"-----Parse Initialized Successfully");
+        // NSLog(@"-----Parse Initialized Successfully");
     }
 }
 
--(void) registerForRemoteNotifications:(NSData *)deviceToken
++(void) registerForRemoteNotifications:(NSData *)deviceToken
 {
     if(_initialized)
     {
@@ -99,12 +115,12 @@ static bool _initialized = false;
     }
 }
 
--(void) failedToRegister:(NSError *)error
++(void) failedToRegister:(NSError *)error
 {
     _initialized = false;
 }
 
--(void) receivedRemoteNotification:(NSDictionary *)userInfo
++(void) receivedRemoteNotification:(NSDictionary *)userInfo
 {
     if(_initialized)
     {
@@ -116,9 +132,30 @@ static bool _initialized = false;
 
 @end
 
+
+@interface SDLUIKitDelegate (SDLUIKitDelegatePush)
+@end
+
+@implementation SDLUIKitDelegate (SDLUIKitDelegatePush)
+
+- (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
+  [ParseAPIiOS registerForRemoteNotifications:deviceToken];
+}
+
+- (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo {
+  [ParseAPIiOS receivedRemoteNotification:userInfo];
+}
+
+@end
+
+
+
+
+
 ///initializes the data for the Parse class for iOS
 void platform_parseInitialize()
 {
+    [ParseAPIiOS initialize];
 }
 
 ///check if the Parse API is active for use

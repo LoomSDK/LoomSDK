@@ -1,67 +1,72 @@
-//
-//  PFProduct.h
-//  Parse
-//
-//  Created by Qian Wang on 6/7/12.
-//  Copyright (c) 2012 Parse Inc. All rights reserved.
-//
+/**
+ * Copyright (c) 2015-present, Parse, LLC.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ */
 
-#import "PFObject.h"
-#import "PFSubclassing.h"
-#import "PFFile.h"
+#import <Foundation/Foundation.h>
 
-/*!
- Represents an in-app purchase product on the Parse server.
- By default, products can only be created via the data browser; saving a PFProduct
- will result in error. However, the products' metadata information can be queried 
- and viewed.
+#import <Parse/PFFile.h>
+#import <Parse/PFObject.h>
+#import <Parse/PFSubclassing.h>
+
+PF_OSX_UNAVAILABLE_WARNING
+PF_WATCH_UNAVAILABLE_WARNING
+
+NS_ASSUME_NONNULL_BEGIN
+
+/**
+ The `PFProduct` class represents an in-app purchase product on the Parse server.
+ By default, products can only be created via the Data Browser. Saving a `PFProduct` will result in error.
+ However, the products' metadata information can be queried and viewed.
 
  This class is currently for iOS only.
  */
-@interface PFProduct : PFObject<PFSubclassing>
+PF_OSX_UNAVAILABLE PF_WATCH_UNAVAILABLE @interface PFProduct : PFObject<PFSubclassing>
 
-/*! The name of the Product class in the REST API. This is a required
- *  PFSubclassing method */
-+ (NSString *)parseClassName;
+///--------------------------------------
+#pragma mark - Product-specific Properties
+///--------------------------------------
 
-/** @name Querying for Products */
-/*!
- A query that fetches all product instances registered on Parse's server.
- */
-+ (PFQuery *)query;
+/**
+ The product identifier of the product.
 
-/** @name Accessing Product-specific Properties */
-/*!
- The product identifier of the product. 
  This should match the product identifier in iTunes Connect exactly.
  */
-@property (nonatomic, retain) NSString *productIdentifier;
+@property (nullable, nonatomic, strong) NSString *productIdentifier;
 
-/*!
+/**
  The icon of the product.
  */
-@property (nonatomic, retain) PFFile *icon;
+@property (nullable, nonatomic, strong) PFFile *icon;
 
-/*!
+/**
  The title of the product.
- */ 
-@property (nonatomic, retain) NSString *title;
+ */
+@property (nullable, nonatomic, strong) NSString *title;
 
-/*!
+/**
  The subtitle of the product.
  */
-@property (nonatomic, retain) NSString *subtitle;
+@property (nullable, nonatomic, strong) NSString *subtitle;
 
-/*!
- The order in which the product information is displayed in PFProductTableViewController.
- The product with a smaller order is displayed earlier in the PFProductTableViewController. 
+/**
+ The order in which the product information is displayed in `PFProductTableViewController`.
+
+ The product with a smaller order is displayed earlier in the `PFProductTableViewController`.
  */
-@property (nonatomic, retain) NSNumber *order;
+@property (nullable, nonatomic, strong) NSNumber *order;
 
-/*!
- The name of the associated download. If there is no downloadable asset, it should be nil.
+/**
+ The name of the associated download.
+
+ If there is no downloadable asset, it should be `nil`.
  */
-@property (nonatomic, readonly) NSString *downloadName;
-
+@property (nullable, nonatomic, strong, readonly) NSString *downloadName;
 
 @end
+
+NS_ASSUME_NONNULL_END

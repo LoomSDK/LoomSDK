@@ -1,86 +1,124 @@
-//
-//  PFInstallation.h
-//  Parse
-//
-//  Created by Brian Jacokes on 6/4/12.
-//  Copyright (c) 2012 Parse, Inc. All rights reserved.
-//
+/**
+ * Copyright (c) 2015-present, Parse, LLC.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ */
 
 #import <Foundation/Foundation.h>
-#import "PFObject.h"
-#import "PFSubclassing.h"
 
-/*!
+#import <Parse/PFObject.h>
+#import <Parse/PFSubclassing.h>
+
+PF_TV_UNAVAILABLE_WARNING
+PF_WATCH_UNAVAILABLE_WARNING
+
+NS_ASSUME_NONNULL_BEGIN
+
+/**
  A Parse Framework Installation Object that is a local representation of an
  installation persisted to the Parse cloud. This class is a subclass of a
- PFObject, and retains the same functionality of a PFObject, but also extends
+ `PFObject`, and retains the same functionality of a PFObject, but also extends
  it with installation-specific fields and related immutability and validity
  checks.
- 
- A valid PFInstallation can only be instantiated via
- [PFInstallation currentInstallation] because the required identifier fields
- are readonly. The timeZone and badge fields are also readonly properties which
+
+ A valid `PFInstallation` can only be instantiated via
+ `+currentInstallation` because the required identifier fields
+ are readonly. The `timeZone` and `badge` fields are also readonly properties which
  are automatically updated to match the device's time zone and application badge
- when the PFInstallation is saved, thus these fields might not reflect the
+ when the `PFInstallation` is saved, thus these fields might not reflect the
  latest device state if the installation has not recently been saved.
 
- PFInstallation objects which have a valid deviceToken and are saved to
+ `PFInstallation` objects which have a valid `deviceToken` and are saved to
  the Parse cloud can be used to target push notifications.
-
- This class is currently for iOS only. There is no PFInstallation for Parse
- applications running on OS X, because they cannot receive push notifications.
  */
 
-@interface PFInstallation : PFObject<PFSubclassing>
+PF_TV_UNAVAILABLE PF_WATCH_UNAVAILABLE @interface PFInstallation : PFObject<PFSubclassing>
 
-/*! The name of the Installation class in the REST API. This is a required
- *  PFSubclassing method */
-+ (NSString *)parseClassName;
+///--------------------------------------
+#pragma mark - Accessing the Current Installation
+///--------------------------------------
 
-/** @name Targeting Installations */
+/**
+ Gets the currently-running installation from disk and returns an instance of it.
 
-/*!
- Creates a query for PFInstallation objects. The resulting query can only
- be used for targeting a PFPush. Calling find methods on the resulting query
- will raise an exception.
+ If this installation is not stored on disk this method will create a new `PFInstallation`
+ with `deviceType` and `installationId` fields set to those of the current installation.
+
+ @result Returns a `PFInstallation` that represents the currently-running installation if it could be loaded from disk, otherwise - `nil`.
  */
-+ (PFQuery *)query;
++ (nullable instancetype)currentInstallation;
 
-/** @name Accessing the Current Installation */
+/**
+ *Asynchronously* loads the currently-running installation from disk and returns an instance of it.
 
-/*!
- Gets the currently-running installation from disk and returns an instance of
- it. If this installation is not stored on disk, returns a PFInstallation
- with deviceType and installationId fields set to those of the
- current installation.
- @result Returns a PFInstallation that represents the currently-running
- installation.
+ If this installation is not stored on disk this method will create a new `PFInstallation`
+ with `deviceType` and `installationId` fields set to those of the current installation.
+
+ @result Returns a task that incapsulates the current installation.
  */
-+ (instancetype)currentInstallation;
++ (BFTask<__kindof PFInstallation *> *)getCurrentInstallationInBackground;
 
-/*!
- Sets the device token string property from an NSData-encoded token.
+///--------------------------------------
+#pragma mark - Installation Properties
+///--------------------------------------
+
+/**
+ The device type for the `PFInstallation`.
  */
-- (void)setDeviceTokenFromData:(NSData *)deviceTokenData;
+@property (nonatomic, copy, readonly) NSString *deviceType;
 
-/** @name Properties */
+/**
+ The installationId for the `PFInstallation`.
+ */
+@property (nonatomic, copy, readonly) NSString *installationId;
 
-/// The device type for the PFInstallation.
-@property (nonatomic, readonly, retain) NSString *deviceType;
+/**
+ The device token for the `PFInstallation`.
+ */
+@property (nullable, nonatomic, copy) NSString *deviceToken;
 
-/// The installationId for the PFInstallation.
-@property (nonatomic, readonly, retain) NSString *installationId;
-
-/// The device token for the PFInstallation.
-@property (nonatomic, retain) NSString *deviceToken;
-
-/// The badge for the PFInstallation.
+/**
+ The badge for the `PFInstallation`.
+ */
 @property (nonatomic, assign) NSInteger badge;
 
-/// The timeZone for the PFInstallation.
-@property (nonatomic, readonly, retain) NSString *timeZone;
+/**
+ The name of the time zone for the `PFInstallation`.
+ */
+@property (nullable, nonatomic, copy, readonly) NSString *timeZone;
 
-/// The channels for the PFInstallation.
-@property (nonatomic, retain) NSArray *channels;
+/**
+ The channels for the `PFInstallation`.
+ */
+@property (nullable, nonatomic, copy) NSArray<NSString *> *channels;
+
+/**
+ Sets the device token string property from an `NSData`-encoded token.
+
+ @param deviceTokenData A token that identifies the device.
+ */
+- (void)setDeviceTokenFromData:(nullable NSData *)deviceTokenData;
+
+///--------------------------------------
+#pragma mark - Querying for Installations
+///--------------------------------------
+
+/**
+ Creates a `PFQuery` for `PFInstallation` objects.
+
+ Only the following types of queries are allowed for installations:
+
+ - `[query getObjectWithId:<value>]`
+ - `[query whereKey:@"installationId" equalTo:<value>]`
+ - `[query whereKey:@"installationId" matchesKey:<key in query> inQuery:<query>]`
+
+ You can add additional query conditions, but one of the above must appear as a top-level `AND` clause in the query.
+ */
++ (nullable PFQuery *)query;
 
 @end
+
+NS_ASSUME_NONNULL_END

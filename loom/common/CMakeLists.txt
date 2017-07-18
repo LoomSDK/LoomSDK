@@ -32,10 +32,12 @@ if (APPLE)
         if(LOOM_BUILD_FACEBOOK EQUAL 1)
             set (CPP_FILES ${CPP_FILES} 
                 platform/platformFacebookiOS.mm
-                platform/platformTeakiOS.mm
-                platform/platformParseiOS.mm
             )
         endif()
+
+        set (CPP_FILES ${CPP_FILES} 
+            platform/platformParseiOS.mm
+        )
 
     else()
         set (CPP_FILES ${CPP_FILES} 

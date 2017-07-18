@@ -61,7 +61,7 @@ CFG =
 
     # Whether or not to include Admob and/or Facebook in the build... for Great Apple Compliance!
     BUILD_ADMOB: 0,
-    BUILD_FACEBOOK: 1,
+    BUILD_FACEBOOK: 0,
 
     # Allow disabling Loom doc generation, as it can be very slow.
     # Disabled by default, set environment variable 'LOOM_BUILD_DOCS'
@@ -421,7 +421,7 @@ namespace :build do
     end
     puts "== Building LuaJIT for iOS =="
     toolchain = IOSToolchain.new("")
-    luajit_make, targets = buildLuaJIT(MakeToolchain.new(toolchain), [:armv7, :armv7s, :arm64])
+    luajit_make, targets = buildLuaJIT(MakeToolchain.new(toolchain), [:armv7, :arm64])
     combined = LuaJITTarget.new(:arm, $BUILD_TYPE)
     toolchain.combine(luajit_make, targets, combined)
   end
