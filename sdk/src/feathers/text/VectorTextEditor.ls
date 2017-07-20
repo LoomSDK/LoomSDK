@@ -289,10 +289,14 @@ package feathers.text
                 var br = localToGlobal(new Point(width, height));
                 var rw = stage.nativeStageWidth/stage.stageWidth;
                 var rh = stage.nativeStageHeight/stage.stageHeight;
-                tl.x *= rw;
-                tl.y *= rh;
-                br.x *= rw;
-                br.y *= rh;
+                tl.x *= stage.scale;
+                tl.y *= stage.scale;
+                br.x *= stage.scale;
+                br.y *= stage.scale;
+                tl.x += stage.x;
+                tl.y += stage.y;
+                br.x += stage.x;
+                br.y += stage.y;
                 _imeDelegate.setTextInputRect(new Rectangle(tl.x, tl.y, br.x-tl.x, br.y-tl.y));
             }
             _caretQuad.visible = true;

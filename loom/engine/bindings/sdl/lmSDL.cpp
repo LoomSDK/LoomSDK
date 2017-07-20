@@ -25,6 +25,8 @@
 #include <SDL.h>
 #include "lmSDL.h"
 
+extern SDL_Window *gSDLWindow;
+
 IMEDelegateDispatcher* IMEDelegateDispatcher::shared() {
     static IMEDelegateDispatcher instance;
     return &instance;
@@ -134,10 +136,25 @@ void IMEDelegate::keyboardDidHide(IMEKeyboardNotificationInfo& info)
 
 void IMEDelegate::setTextInputRect(Loom2D::Rectangle rect) {
     SDL_Rect r;
+#if LOOM_PLATFORM == LOOM_PLATFORM_IOS
+    // The rectangle needs to be scaled on iOS since the API works in window
+    // units and not device units.
+    int windowWidth, windowHeight;
+    SDL_GetWindowSize(gSDLWindow, &windowWidth, &windowHeight);
+    int drawableWidth, drawableHeight;
+    SDL_GL_GetDrawableSize(gSDLWindow, &drawableWidth, &drawableHeight);
+    float scaleX = (float) windowWidth / drawableWidth;
+    float scaleY = (float) windowHeight / drawableHeight;
+    r.x = rect.x * scaleX;
+    r.y = rect.y * scaleY;
+    r.w = rect.width * scaleX;
+    r.h = rect.height * scaleY;
+#else
     r.x = (int) rect.x;
     r.y = (int) rect.y;
     r.w = (int) rect.width;
     r.h = (int) rect.height;
+#endif
     SDL_SetTextInputRect(&r);
 };
 bool IMEDelegate::attachWithIME(int type) { 
