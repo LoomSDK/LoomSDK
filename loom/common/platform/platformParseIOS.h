@@ -33,6 +33,7 @@ limitations under the License.
 +(void)initialize;
 +(void)registerForRemoteNotifications:(NSData *)deviceToken;
 +(void)failedToRegister:(NSError *)code;
++(void)handleRemoteNotification:(NSDictionary *)info;
 +(void)receivedRemoteNotification:(NSDictionary *)userInfo;
 
 @end

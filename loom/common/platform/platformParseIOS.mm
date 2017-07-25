@@ -28,6 +28,8 @@ limitations under the License.
 #include "loom/common/platform/platform.h"
 #include "loom/common/platform/platformParse.h"
 #include "loom/common/platform/platformParseiOS.h"
+#include "loom/common/platform/platformMobile.h"
+#include "loom/common/platform/platformMobileiOS.h"
 #include "loom/common/core/log.h"
 #include "loom/common/core/assert.h"
 #include "loom/vendor/jansson/jansson.h"
@@ -35,6 +37,7 @@ limitations under the License.
 
 
 static bool _initialized = false;
+extern NSDictionary *gRemoteNotificationPayloadDictionary;
 
 @implementation ParseAPIiOS
 
@@ -120,32 +123,82 @@ static bool _initialized = false;
     _initialized = false;
 }
 
++(void) handleRemoteNotification:(NSDictionary *)info
+{
+    NSObject* aps = [info objectForKey:@"aps"];
+    if ([aps isKindOfClass:[NSDictionary class]]){
+        // Release previous payload if any
+        if (gRemoteNotificationPayloadDictionary) {
+            NSString* jsonString = [gRemoteNotificationPayloadDictionary objectForKey:@"data"];
+            if (jsonString) {
+                [jsonString release];
+            }
+            [gRemoteNotificationPayloadDictionary release];
+        }
+        // Create a new one
+        gRemoteNotificationPayloadDictionary = [(NSDictionary*)aps mutableCopy];
+        NSObject* data = [info objectForKey:@"data"];
+        if (data)
+        {
+            NSError* err;
+            NSData* jsonData = [NSJSONSerialization dataWithJSONObject:data options:0 error:&err];
+            NSString* jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+            [gRemoteNotificationPayloadDictionary setValue:jsonString forKey:@"data"];
+        }
+        ios_RemoteNotificationOpen();
+    }
+}
+
 +(void) receivedRemoteNotification:(NSDictionary *)userInfo
 {
     if(_initialized)
     {
         [PFPush handlePush:userInfo];
-        NSLog(@"-----Parse Received Remote Notifications");
+        [ParseAPIiOS handleRemoteNotification:userInfo];
     }
 }
 
-
 @end
 
 
+// Delegate subclass to catch events
+@interface SDLUIKitDelegateSub : SDLUIKitDelegate
+- (bool)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions;
+@end
+
+@implementation SDLUIKitDelegateSub : SDLUIKitDelegate
+- (bool)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+{
+    if (launchOptions != nil)
+    {
+        NSDictionary* dictionary = [launchOptions objectForKey:UIApplicationLaunchOptionsRemoteNotificationKey];
+        if (dictionary) {
+            [ParseAPIiOS handleRemoteNotification:dictionary];
+        }
+    }
+    return [super application:application didFinishLaunchingWithOptions:launchOptions];
+}
+@end
+
+
+
+// Class category to catch some events and setup the subclass
 @interface SDLUIKitDelegate (SDLUIKitDelegatePush)
 @end
-
 @implementation SDLUIKitDelegate (SDLUIKitDelegatePush)
+// Tells SDL to init with our subclass instead of the base class
++ (NSString *)getAppDelegateClassName
+{
+    return @"SDLUIKitDelegateSub";
+}
 
 - (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
-  [ParseAPIiOS registerForRemoteNotifications:deviceToken];
+    [ParseAPIiOS registerForRemoteNotifications:deviceToken];
 }
 
 - (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo {
-  [ParseAPIiOS receivedRemoteNotification:userInfo];
+    [ParseAPIiOS receivedRemoteNotification:userInfo];
 }
-
 @end
 
 
