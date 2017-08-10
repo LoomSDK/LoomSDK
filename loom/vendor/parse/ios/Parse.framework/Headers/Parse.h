@@ -20,10 +20,13 @@
 #import <Parse/PFConfig.h>
 #import <Parse/PFConfig+Synchronous.h>
 #import <Parse/PFConstants.h>
+#import <Parse/PFDecoder.h>
+#import <Parse/PFEncoder.h>
 #import <Parse/PFFile.h>
 #import <Parse/PFFile+Deprecated.h>
 #import <Parse/PFFile+Synchronous.h>
 #import <Parse/PFGeoPoint.h>
+#import <Parse/PFPolygon.h>
 #import <Parse/PFObject.h>
 #import <Parse/PFObject+Subclass.h>
 #import <Parse/PFObject+Synchronous.h>
@@ -39,6 +42,8 @@
 #import <Parse/PFUser+Synchronous.h>
 #import <Parse/PFUser+Deprecated.h>
 #import <Parse/PFUserAuthenticationDelegate.h>
+#import <Parse/PFFileUploadResult.h>
+#import <Parse/PFFileUploadController.h>
 
 #if TARGET_OS_IOS
 

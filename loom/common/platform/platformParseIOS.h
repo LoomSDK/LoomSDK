@@ -31,7 +31,7 @@ limitations under the License.
 @interface ParseAPIiOS : NSObject
 
 +(void)initialize;
-+(void)registerForRemoteNotifications:(NSData *)deviceToken;
++(void)didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken;
 +(void)failedToRegister:(NSError *)code;
 +(void)handleRemoteNotification:(NSDictionary *)info;
 +(void)receivedRemoteNotification:(NSDictionary *)userInfo;

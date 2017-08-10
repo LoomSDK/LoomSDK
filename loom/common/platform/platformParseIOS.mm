@@ -57,7 +57,7 @@ extern NSDictionary *gRemoteNotificationPayloadDictionary;
     
     if(app_id != nil && ([app_id isEqualToString:@""] == FALSE))
     {
-        // NSLog(@"-----Initializing Parse");
+        NSLog(@"Parse initialization");
 
         [Parse initializeWithConfiguration:[ParseClientConfiguration configurationWithBlock:^(id<ParseMutableClientConfiguration>  _Nonnull configuration) {
             configuration.applicationId = app_id;
@@ -99,21 +99,21 @@ extern NSDictionary *gRemoteNotificationPayloadDictionary;
                                                                                     UIRemoteNotificationTypeSound];    
         }
         _initialized = true;
-        // NSLog(@"-----Parse Initialized Successfully");
+        NSLog(@"Parse initialized");
     }
 }
 
-+(void) registerForRemoteNotifications:(NSData *)deviceToken
++(void) didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken
 {
     if(_initialized)
     {
         // Store the deviceToken in the current installation and save it to Parse.
         PFInstallation *currentInstallation = [PFInstallation currentInstallation];
-        if(currentInstallation != NULL)
+        if(currentInstallation)
         {
             [currentInstallation setDeviceTokenFromData:deviceToken];
             [currentInstallation saveInBackground];    
-            NSLog(@"-----Parse Registered for Remote Notifications Successfully");
+            NSLog(@"Parse registered for remote notifications");
         }
     }
 }
@@ -125,8 +125,9 @@ extern NSDictionary *gRemoteNotificationPayloadDictionary;
 
 +(void) handleRemoteNotification:(NSDictionary *)info
 {
+    if (!info) return;
     NSObject* aps = [info objectForKey:@"aps"];
-    if ([aps isKindOfClass:[NSDictionary class]]){
+    if (aps && [aps isKindOfClass:[NSDictionary class]]){
         // Release previous payload if any
         if (gRemoteNotificationPayloadDictionary) {
             NSString* jsonString = [gRemoteNotificationPayloadDictionary objectForKey:@"data"];
@@ -193,7 +194,7 @@ extern NSDictionary *gRemoteNotificationPayloadDictionary;
 }
 
 - (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
-    [ParseAPIiOS registerForRemoteNotifications:deviceToken];
+    [ParseAPIiOS didRegisterForRemoteNotificationsWithDeviceToken:deviceToken];
 }
 
 - (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo {
