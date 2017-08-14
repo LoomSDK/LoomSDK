@@ -51,3 +51,11 @@ Once successfuly compiled and deployed, change directory to your project and iss
 You'll now be developing with your custom Loom build!
  
 For more information, please see the individual Readme files for platform specific setup instructions.
+
+**rake -f build/Swarley package:universal_sdk**
+
+Builds a cross-platform SDK using as many platforms as are available in the 
+`artifacts` directory. For example, the SDK is built on Windows and OSX and then
+the `windows-x64` and `windows-x86` dirs in `artifacts` are copied over to the
+`artifacts` dir on OSX. There the above command is ran to build a Windows + OSX
+SDK.

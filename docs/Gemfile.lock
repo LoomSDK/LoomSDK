@@ -1,14 +1,12 @@
 GEM
   remote: http://rubygems.org/
   specs:
-    json (1.8.0)
-    nokogiri (1.5.10)
-    posix-spawn (0.3.6)
-    pygments.rb (0.5.2)
-      posix-spawn (~> 0.3.6)
-      yajl-ruby (~> 1.1.0)
+    json (2.1.0)
+    multi_json (1.12.1)
+    nokogiri (1.5.11)
+    pygments.rb (1.1.2)
+      multi_json (>= 1.0.0)
     redcarpet (2.3.0)
-    yajl-ruby (1.1.0)
 
 PLATFORMS
   ruby
@@ -18,3 +16,6 @@ DEPENDENCIES
   nokogiri (~> 1.5.10)
   pygments.rb
   redcarpet (~> 2.3.0)
+
+BUNDLED WITH
+   1.15.3
